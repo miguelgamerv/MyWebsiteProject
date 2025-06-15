@@ -1,0 +1,7 @@
+1ª Observação!
+
+Sempre que a versão for atualizada, os conectores de ficheiros no código HTML também precisam ser ajustados para que tudo funcione corretamente.
+
+2ª Observação!
+
+A pasta imagens deve sempre ficar na mesma pasta em que os ficheiros de código estão guardados.

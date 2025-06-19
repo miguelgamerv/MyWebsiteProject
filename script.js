@@ -1355,6 +1355,259 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize hero title animation
     initHeroTitleAnimation();
 
+    // Newsletter Signup Functionality for Latest Releases
+    const newsletterForm = document.querySelector('.newsletter-form');
+    const newsletterInput = document.getElementById('newsletter-email');
+    const newsletterButton = document.getElementById('newsletter-submit');
+
+    if (newsletterForm && newsletterInput && newsletterButton) {
+        // Email validation function
+        const validateEmail = (email) => {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email.trim());
+        };
+
+        // Show feedback message
+        const showFeedback = (message, type = 'success') => {
+            // Remove existing feedback
+            const existingFeedback = document.querySelector('.newsletter-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.className = `newsletter-feedback ${type}`;
+            feedback.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: ${type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 0 0 25px 25px;
+                font-size: 0.9rem;
+                text-align: center;
+                z-index: 10;
+                animation: feedbackSlide 0.3s ease-out;
+                backdrop-filter: blur(10px);
+                border: 1px solid ${type === 'success' ? 'var(--success-color)' : 'var(--error-color)'};
+                border-top: none;
+            `;
+            feedback.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}`;
+
+            // Position relative to newsletter form
+            newsletterForm.style.position = 'relative';
+            newsletterForm.appendChild(feedback);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.style.animation = 'feedbackSlide 0.3s ease-out reverse';
+                    setTimeout(() => feedback.remove(), 300);
+                }
+            }, 5000);
+        };
+
+        // Input validation styling
+        const setInputState = (isValid, message = '') => {
+            if (isValid) {
+                newsletterInput.style.borderColor = 'var(--success-color)';
+                newsletterInput.style.boxShadow = '0 0 15px rgba(40, 167, 69, 0.3)';
+            } else {
+                newsletterInput.style.borderColor = 'var(--error-color)';
+                newsletterInput.style.boxShadow = '0 0 15px rgba(220, 53, 69, 0.3)';
+            }
+        };
+
+        // Reset input styling
+        const resetInputState = () => {
+            newsletterInput.style.borderColor = '';
+            newsletterInput.style.boxShadow = '';
+        };
+
+        // Real-time email validation
+        newsletterInput.addEventListener('input', () => {
+            resetInputState();
+            const email = newsletterInput.value.trim();
+            
+            if (email.length > 0) {
+                if (validateEmail(email)) {
+                    setInputState(true);
+                } else if (email.length > 5) { // Only show error after user has typed enough
+                    setInputState(false);
+                }
+            }
+        });
+
+        // Newsletter form submission
+        const handleNewsletterSubmit = (e) => {
+            e.preventDefault();
+            
+            const email = newsletterInput.value.trim();
+            
+            // Validate email
+            if (!email) {
+                setInputState(false);
+                showFeedback('Por favor, insira o seu email.', 'error');
+                newsletterInput.focus();
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                setInputState(false);
+                showFeedback('Por favor, insira um email válido.', 'error');
+                newsletterInput.focus();
+                return;
+            }
+
+            // Show loading state
+            const originalButtonContent = newsletterButton.innerHTML;
+            newsletterButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            newsletterButton.disabled = true;
+            newsletterInput.disabled = true;
+            resetInputState();
+
+            // Simulate API call
+            setTimeout(() => {
+                // Success response
+                showFeedback(`Obrigado! O email ${email} foi adicionado à nossa lista de novidades.`, 'success');
+                
+                // Reset form
+                newsletterInput.value = '';
+                resetInputState();
+                
+                // Reset button
+                newsletterButton.innerHTML = originalButtonContent;
+                newsletterButton.disabled = false;
+                newsletterInput.disabled = false;
+                
+                // Store subscription locally (for demo purposes)
+                try {
+                    let subscribers = JSON.parse(localStorage.getItem('nplay-newsletter-subscribers') || '[]');
+                    if (!subscribers.includes(email)) {
+                        subscribers.push(email);
+                        localStorage.setItem('nplay-newsletter-subscribers', JSON.stringify(subscribers));
+                    }
+                } catch (e) {
+                    console.log('Could not store subscription locally');
+                }
+                
+                // Add success animation to the newsletter section
+                const newsletterSection = document.querySelector('.releases-newsletter');
+                if (newsletterSection) {
+                    newsletterSection.style.animation = 'successPulse 0.6s ease-out';
+                    setTimeout(() => {
+                        newsletterSection.style.animation = '';
+                    }, 600);
+                }
+                
+            }, 2000); // 2 second loading simulation
+        };
+
+        // Event listeners
+        newsletterButton.addEventListener('click', handleNewsletterSubmit);
+        newsletterForm.addEventListener('submit', handleNewsletterSubmit);
+        
+        // Enter key submission
+        newsletterInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleNewsletterSubmit(e);
+            }
+        });
+
+        // Add CSS animations for feedback
+        const newsletterStyles = document.createElement('style');
+        newsletterStyles.textContent = `
+            @keyframes feedbackSlide {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            @keyframes successPulse {
+                0%, 100% {
+                    transform: scale(1);
+                    border-color: rgba(255, 51, 51, 0.3);
+                }
+                50% {
+                    transform: scale(1.02);
+                    border-color: rgba(40, 167, 69, 0.6);
+                    box-shadow: 0 20px 60px rgba(40, 167, 69, 0.3);
+                }
+            }
+            
+            .newsletter-input:focus {
+                outline: none;
+            }
+            
+            .newsletter-feedback {
+                animation: feedbackSlide 0.3s ease-out;
+            }
+        `;
+        document.head.appendChild(newsletterStyles);
+    }
+
+    // Enhanced scroll behavior for Latest Releases section
+    const latestReleasesSection = document.getElementById('novidades');
+    if (latestReleasesSection) {
+        // Add entrance animation when section comes into view
+        const releasesObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Staggered animation for release cards
+                    const releaseCards = entry.target.querySelectorAll('.release-card');
+                    releaseCards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, index * 150);
+                    });
+                    
+                    // Featured release animation
+                    const featuredRelease = entry.target.querySelector('.featured-release');
+                    if (featuredRelease) {
+                        setTimeout(() => {
+                            featuredRelease.style.opacity = '1';
+                            featuredRelease.style.transform = 'translateY(0) scale(1)';
+                        }, 300);
+                    }
+                    
+                    releasesObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '50px'
+        });
+        
+        releasesObserver.observe(latestReleasesSection);
+        
+        // Initial state for animations
+        const releaseCards = latestReleasesSection.querySelectorAll('.release-card');
+        const featuredRelease = latestReleasesSection.querySelector('.featured-release');
+        
+        releaseCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease-out';
+        });
+        
+        if (featuredRelease) {
+            featuredRelease.style.opacity = '0';
+            featuredRelease.style.transform = 'translateY(30px) scale(0.95)';
+            featuredRelease.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        }
+    }
+
     // Hero Title Animation Function - Subtle version
     function initHeroTitleAnimation() {
         const heroTitle = document.getElementById('hero-title');
